@@ -9,11 +9,7 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/fetch_data/<country>/<region>/<well>/<well_number>', methods=['GET'])
 @handle_errors
 def fetch_data(country, region, well, well_number):
-    """
-    Endpoint para obtener y procesar datos de volúmenes basado en parámetros de ruta.
-    """
     try:
-        # Validar si el header de autorización está presente
         auth_header = request.headers.get('Authorization')
         if not auth_header:
             return jsonify({"error": "Authorization header is required"}), 400
