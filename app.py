@@ -1,6 +1,16 @@
-from src import create_app
+from flask import Flask
+from src.config import Config
+from src.routes.volume_tracker_routes import main_bp
 
-app = create_app()
+def create_app(config_class=Config):
+    app = Flask(__name__)
+    app.config.from_object(config_class)
+    
+    # Registrar Blueprints
+    app.register_blueprint(main_bp)
+    
+    return app
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app = create_app()
+    app.run(host="0.0.0.0", port=5000)
