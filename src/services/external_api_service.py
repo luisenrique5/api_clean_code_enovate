@@ -15,7 +15,7 @@ def fetch_and_process_data(mongo):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status() 
-        data = response.json()  # Convert the response to JSON
+        data = response.json()  
         logging.info("Data fetched from external API: %s", data)
         if data.get('apiStatus') and 'data' in data:
             process_data(data['data'], mongo)

@@ -12,12 +12,10 @@ mongo = PyMongo(app)
 
 def create_app():
     with app.app_context():
-        # Inicia el servicio para consultar la API externa cada 5 minutos
         scheduler = BackgroundScheduler()
         scheduler.add_job(func=fetch_and_process_data, trigger="interval", minutes=5, args=[mongo])
         scheduler.start()
 
-        # Registrar rutas de cálculo
         create_calculation_routes(app, mongo)
         
         return app

@@ -3,7 +3,6 @@ from src.auth import token_required
 from src.services.calculation_service import perform_calculations
 from datetime import datetime
 
-# Almacenamos los resultados en una variable global para simplicidad
 stored_results = {}
 
 def register_calculation_routes(app, mongo):

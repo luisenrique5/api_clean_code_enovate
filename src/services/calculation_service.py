@@ -10,7 +10,6 @@ def perform_calculations(data, mongo):
         if not separator_type:
             continue
 
-        # Recuperar todos los registros del mes actual
         db_results = mongo.db.tracker_volume.find({
             "separator_type": separator_type,
             "date": {
