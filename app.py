@@ -13,7 +13,7 @@ mongo = PyMongo(app)
 def create_app():
     with app.app_context():
         scheduler = BackgroundScheduler()
-        scheduler.add_job(func=fetch_and_process_data, trigger="interval", minutes=1)
+        scheduler.add_job(func=fetch_and_process_data, trigger="interval", minutes=5)
         scheduler.start()
 
         create_calculation_routes(app, mongo)
