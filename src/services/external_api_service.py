@@ -1,11 +1,9 @@
-import logging
 import requests
 from datetime import datetime
 import os
+from src.config import Config
 
-logging.basicConfig(level=logging.INFO)
-
-def fetch_and_process_data(mongo):
+def fetch_and_process_data():
     url = os.getenv('EXTERNAL_API')
     token = os.getenv('EXTERNAL_API_TOKEN')
     headers = {
@@ -16,27 +14,24 @@ def fetch_and_process_data(mongo):
         response = requests.get(url, headers=headers)
         response.raise_for_status() 
         data = response.json()  
-        logging.info("Data fetched from external API: %s", data)
         if data.get('apiStatus') and 'data' in data:
-            process_data(data['data'], mongo)
-        else:
-            logging.error("Unexpected data structure: %s", data)
+            process_data(data['data'])
     except requests.exceptions.RequestException as e:
-        logging.error("Error fetching data: %s", e)
+        print(f"Error fetching data: {e}")
     except ValueError as e:
-        logging.error("Error parsing JSON: %s", e)
+        print(f"Error parsing JSON: {e}")
 
-def process_data(data, mongo):
+def process_data(data):
     if not isinstance(data, list):
-        logging.error("Unexpected data format: %s", data)
+        print(f"Unexpected data format: {data}")
         return
 
-    collection = mongo.db.tracker_volume
+    collection = Config.get_mongo_collection()
     date_now = datetime.now().strftime("%Y-%m-%d")
     
     for entry in data:
         if not isinstance(entry, dict):
-            logging.error("Unexpected entry format: %s", entry)
+            print(f"Unexpected entry format: {entry}")
             continue
 
         lsd = entry.get("LSD")
@@ -60,12 +55,11 @@ def process_data(data, mongo):
                     initialize_data(date_now, separator_type, liquid_value, gas_value, collection)
 
 def update_data(doc, liquid_value, gas_value, collection):
+    count = doc.get("count", 0) + 1
 
-    doc["liquid_values"].append(liquid_value)
-    doc["gas_values"].append(gas_value)
-
-    doc["liquid_avg"] = sum(doc["liquid_values"]) / len(doc["liquid_values"])
-    doc["gas_avg"] = sum(doc["gas_values"]) / len(doc["gas_values"])
+    doc["liquid_avg"] = ((doc.get("liquid_avg", 0) * (count - 1)) + liquid_value) / count
+    doc["gas_avg"] = ((doc.get("gas_avg", 0) * (count - 1)) + gas_value) / count
+    doc["count"] = count
 
     collection.update_one({"_id": doc["_id"]}, {"$set": doc})
 
@@ -73,9 +67,8 @@ def initialize_data(date, separator_type, liquid_value, gas_value, collection):
     doc = {
         "date": date,
         "separator_type": separator_type,
-        "liquid_values": [liquid_value],
-        "gas_values": [gas_value],
         "liquid_avg": liquid_value,
-        "gas_avg": gas_value
+        "gas_avg": gas_value,
+        "count": 1
     }
     result = collection.insert_one(doc)
